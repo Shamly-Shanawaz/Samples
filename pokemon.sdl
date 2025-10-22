@@ -1,0 +1,327 @@
+"""
+GraphQL Schema for MEW (MyEtherWallet) - Ethereum Wallet Service
+"""
+
+# Enums
+enum Network {
+  MAINNET
+  GOERLI
+  SEPOLIA
+  POLYGON
+  ARBITRUM
+  OPTIMISM
+  BSC
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  DROPPED
+}
+
+enum TokenStandard {
+  ERC20
+  ERC721
+  ERC1155
+}
+
+enum WalletType {
+  SOFTWARE
+  HARDWARE
+  PAPER
+  KEYSTORE
+}
+
+# Types
+type Wallet {
+  id: ID!
+  address: String!
+  type: WalletType!
+  label: String
+  balance: Balance!
+  tokens: [Token!]!
+  nfts: [NFT!]!
+  transactions: [Transaction!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Balance {
+  native: String!
+  nativeUSD: Float!
+  totalUSD: Float!
+}
+
+type Token {
+  id: ID!
+  contractAddress: String!
+  name: String!
+  symbol: String!
+  decimals: Int!
+  standard: TokenStandard!
+  balance: String!
+  balanceFormatted: String!
+  priceUSD: Float
+  valueUSD: Float
+  logo: String
+}
+
+type NFT {
+  id: ID!
+  contractAddress: String!
+  tokenId: String!
+  name: String!
+  description: String
+  image: String
+  collection: String!
+  standard: TokenStandard!
+  attributes: [NFTAttribute!]
+}
+
+type NFTAttribute {
+  traitType: String!
+  value: String!
+}
+
+type Transaction {
+  id: ID!
+  hash: String!
+  from: String!
+  to: String!
+  value: String!
+  gasPrice: String!
+  gasUsed: String
+  gasLimit: String!
+  nonce: Int!
+  status: TransactionStatus!
+  blockNumber: Int
+  timestamp: String
+  data: String
+  network: Network!
+}
+
+type GasPrice {
+  slow: String!
+  standard: String!
+  fast: String!
+  instant: String!
+  slowUSD: Float!
+  standardUSD: Float!
+  fastUSD: Float!
+  instantUSD: Float!
+}
+
+type Block {
+  number: Int!
+  hash: String!
+  timestamp: String!
+  transactions: [String!]!
+  gasUsed: String!
+  gasLimit: String!
+  miner: String!
+}
+
+type SmartContract {
+  address: String!
+  name: String
+  abi: String
+  verified: Boolean!
+  sourceCode: String
+}
+
+type SwapQuote {
+  fromToken: Token!
+  toToken: Token!
+  fromAmount: String!
+  toAmount: String!
+  estimatedGas: String!
+  priceImpact: Float!
+  route: [String!]!
+  provider: String!
+}
+
+type DeFiPosition {
+  id: ID!
+  protocol: String!
+  type: String!
+  tokens: [Token!]!
+  valueUSD: Float!
+  apy: Float
+  rewards: [Token!]
+}
+
+# Input Types
+input CreateWalletInput {
+  type: WalletType!
+  label: String
+  network: Network!
+}
+
+input SendTransactionInput {
+  from: String!
+  to: String!
+  value: String!
+  gasPrice: String
+  gasLimit: String
+  data: String
+  network: Network!
+}
+
+input SwapInput {
+  fromToken: String!
+  toToken: String!
+  amount: String!
+  slippage: Float
+  network: Network!
+}
+
+input TokenFilterInput {
+  standard: TokenStandard
+  minBalance: String
+  searchTerm: String
+}
+
+input TransactionFilterInput {
+  status: TransactionStatus
+  from: String
+  to: String
+  minValue: String
+  startDate: String
+  endDate: String
+}
+
+# Pagination
+type TransactionConnection {
+  edges: [TransactionEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type TransactionEdge {
+  node: Transaction!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Root Types
+type Query {
+  # Wallet queries
+  wallet(address: String!): Wallet
+  wallets: [Wallet!]!
+  
+  # Balance queries
+  balance(address: String!, network: Network!): Balance!
+  tokenBalance(address: String!, tokenAddress: String!, network: Network!): String!
+  
+  # Token queries
+  tokens(
+    address: String!
+    network: Network!
+    filter: TokenFilterInput
+  ): [Token!]!
+  token(contractAddress: String!, network: Network!): Token
+  
+  # NFT queries
+  nfts(address: String!, network: Network!): [NFT!]!
+  nft(contractAddress: String!, tokenId: String!, network: Network!): NFT
+  
+  # Transaction queries
+  transaction(hash: String!, network: Network!): Transaction
+  transactions(
+    address: String!
+    network: Network!
+    filter: TransactionFilterInput
+    first: Int
+    after: String
+  ): TransactionConnection!
+  
+  # Gas queries
+  gasPrice(network: Network!): GasPrice!
+  estimateGas(input: SendTransactionInput!): String!
+  
+  # Block queries
+  block(number: Int!, network: Network!): Block
+  latestBlock(network: Network!): Block!
+  
+  # Contract queries
+  contract(address: String!, network: Network!): SmartContract
+  
+  # Swap queries
+  swapQuote(input: SwapInput!): SwapQuote!
+  
+  # DeFi queries
+  defiPositions(address: String!, network: Network!): [DeFiPosition!]!
+  
+  # Network queries
+  networkStatus(network: Network!): NetworkStatus!
+}
+
+type NetworkStatus {
+  network: Network!
+  isHealthy: Boolean!
+  blockHeight: Int!
+  gasPrice: String!
+  lastUpdated: String!
+}
+
+type Mutation {
+  # Wallet mutations
+  createWallet(input: CreateWalletInput!): Wallet!
+  updateWalletLabel(address: String!, label: String!): Wallet!
+  deleteWallet(address: String!): Boolean!
+  
+  # Transaction mutations
+  sendTransaction(input: SendTransactionInput!): Transaction!
+  cancelTransaction(hash: String!, network: Network!): Transaction!
+  
+  # Token mutations
+  addCustomToken(
+    address: String!
+    contractAddress: String!
+    network: Network!
+  ): Token!
+  removeToken(
+    address: String!
+    contractAddress: String!
+    network: Network!
+  ): Boolean!
+  
+  # Swap mutations
+  executeSwap(input: SwapInput!): Transaction!
+  
+  # Contract mutations
+  deployContract(
+    from: String!
+    bytecode: String!
+    abi: String!
+    network: Network!
+  ): SmartContract!
+  
+  interactWithContract(
+    contractAddress: String!
+    method: String!
+    params: [String!]!
+    value: String
+    network: Network!
+  ): Transaction!
+}
+
+type Subscription {
+  transactionConfirmed(hash: String!): Transaction!
+  newBlock(network: Network!): Block!
+  balanceChanged(address: String!, network: Network!): Balance!
+  gasPriceUpdated(network: Network!): GasPrice!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}

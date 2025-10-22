@@ -1,0 +1,404 @@
+"""
+GraphQL Schema for Pokémon Anime Series
+"""
+
+# Enums
+enum SeriesName {
+  INDIGO_LEAGUE
+  ADVENTURES_IN_ORANGE_ISLANDS
+  JOHTO_JOURNEYS
+  JOHTO_LEAGUE_CHAMPIONS
+  MASTER_QUEST
+  ADVANCED
+  ADVANCED_CHALLENGE
+  ADVANCED_BATTLE
+  BATTLE_FRONTIER
+  DIAMOND_AND_PEARL
+  BATTLE_DIMENSION
+  GALACTIC_BATTLES
+  SINNOH_LEAGUE_VICTORS
+  BLACK_AND_WHITE
+  RIVAL_DESTINIES
+  ADVENTURES_IN_UNOVA
+  XY
+  XY_KALOS_QUEST
+  XYZ
+  SUN_AND_MOON
+  ULTRA_ADVENTURES
+  ULTRA_LEGENDS
+  JOURNEYS
+  MASTER_JOURNEYS
+  ULTIMATE_JOURNEYS
+  HORIZONS
+}
+
+enum CharacterRole {
+  PROTAGONIST
+  COMPANION
+  RIVAL
+  GYM_LEADER
+  ELITE_FOUR
+  CHAMPION
+  VILLAIN
+  TEAM_ROCKET
+  PROFESSOR
+  SUPPORTING
+  RECURRING
+  GUEST
+}
+
+enum PokemonType {
+  NORMAL
+  FIRE
+  WATER
+  ELECTRIC
+  GRASS
+  ICE
+  FIGHTING
+  POISON
+  GROUND
+  FLYING
+  PSYCHIC
+  BUG
+  ROCK
+  GHOST
+  DRAGON
+  DARK
+  STEEL
+  FAIRY
+}
+
+enum EpisodeType {
+  REGULAR
+  FILLER
+  SPECIAL
+  MOVIE
+  TWO_PART
+  FINALE
+}
+
+# Types
+type Episode {
+  id: ID!
+  number: Int!
+  title: String!
+  titleJapanese: String
+  series: Series!
+  season: Int!
+  airDate: String!
+  airDateJapanese: String
+  synopsis: String!
+  type: EpisodeType!
+  duration: Int!
+  characters: [Character!]!
+  featuredPokemon: [AnimePokemon!]!
+  location: Location
+  badges: [Badge!]
+  captures: [Capture!]
+  evolutions: [Evolution!]
+  battles: [Battle!]
+  imageUrl: String
+  watchUrl: String
+}
+
+type Series {
+  id: ID!
+  name: SeriesName!
+  displayName: String!
+  season: Int!
+  episodes: [Episode!]!
+  startDate: String!
+  endDate: String
+  region: String!
+  mainCharacters: [Character!]!
+  totalEpisodes: Int!
+  description: String
+  posterUrl: String
+}
+
+type Character {
+  id: ID!
+  name: String!
+  nameJapanese: String
+  role: CharacterRole!
+  age: Int
+  hometown: String
+  debut: Episode!
+  biography: String!
+  team: [AnimePokemon!]!
+  badges: [Badge!]
+  achievements: [Achievement!]
+  appearances: [Episode!]!
+  voiceActor: VoiceActor
+  imageUrl: String
+}
+
+type AnimePokemon {
+  id: ID!
+  species: String!
+  nickname: String
+  types: [PokemonType!]!
+  owner: Character
+  level: Int
+  gender: String
+  ability: String
+  signature: Boolean!
+  debut: Episode!
+  captureEpisode: Episode
+  releaseEpisode: Episode
+  moves: [Move!]!
+  personality: String
+  imageUrl: String
+}
+
+type Move {
+  name: String!
+  type: PokemonType!
+  learnedIn: Episode
+}
+
+type VoiceActor {
+  id: ID!
+  name: String!
+  language: String!
+  characters: [Character!]!
+  imageUrl: String
+}
+
+type Location {
+  id: ID!
+  name: String!
+  region: String!
+  type: String!
+  description: String
+  episodes: [Episode!]!
+  imageUrl: String
+}
+
+type Badge {
+  id: ID!
+  name: String!
+  gym: String!
+  gymLeader: Character!
+  obtainedIn: Episode!
+  region: String!
+  imageUrl: String
+}
+
+type Achievement {
+  id: ID!
+  title: String!
+  description: String!
+  obtainedIn: Episode!
+  category: String!
+}
+
+type Battle {
+  id: ID!
+  episode: Episode!
+  trainer1: Character!
+  trainer2: Character!
+  pokemon1: [AnimePokemon!]!
+  pokemon2: [AnimePokemon!]!
+  winner: Character
+  battleType: String!
+  stakes: String
+  location: Location
+}
+
+type Capture {
+  id: ID!
+  episode: Episode!
+  trainer: Character!
+  pokemon: AnimePokemon!
+  method: String!
+  location: Location
+}
+
+type Evolution {
+  id: ID!
+  episode: Episode!
+  pokemon: AnimePokemon!
+  evolvedFrom: String!
+  evolvedTo: String!
+  trigger: String!
+}
+
+type Movie {
+  id: ID!
+  title: String!
+  titleJapanese: String
+  number: Int!
+  releaseDate: String!
+  releaseDateJapanese: String
+  duration: Int!
+  synopsis: String!
+  series: Series!
+  characters: [Character!]!
+  featuredPokemon: [AnimePokemon!]!
+  legendaryPokemon: [String!]
+  director: String
+  boxOffice: Float
+  rating: Float
+  posterUrl: String
+  trailerUrl: String
+}
+
+type TeamRocket {
+  jessie: Character!
+  james: Character!
+  meowth: AnimePokemon!
+  appearances: Int!
+  schemes: [Scheme!]!
+}
+
+type Scheme {
+  id: ID!
+  episode: Episode!
+  description: String!
+  success: Boolean!
+}
+
+# Input Types
+input EpisodeFilterInput {
+  series: SeriesName
+  season: Int
+  type: EpisodeType
+  character: String
+  pokemon: String
+  hasGymBattle: Boolean
+  hasCapture: Boolean
+  hasEvolution: Boolean
+  searchTerm: String
+}
+
+input CharacterFilterInput {
+  role: CharacterRole
+  series: SeriesName
+  region: String
+  hasPokemon: String
+  searchTerm: String
+}
+
+input PokemonFilterInput {
+  types: [PokemonType!]
+  owner: String
+  region: String
+  isReleased: Boolean
+  searchTerm: String
+}
+
+input DateRangeInput {
+  startDate: String!
+  endDate: String!
+}
+
+# Pagination
+type EpisodeConnection {
+  edges: [EpisodeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type EpisodeEdge {
+  node: Episode!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Root Types
+type Query {
+  # Episode queries
+  episode(id: ID!): Episode
+  episodeByNumber(number: Int!, series: SeriesName!): Episode
+  episodes(
+    filter: EpisodeFilterInput
+    first: Int
+    after: String
+  ): EpisodeConnection!
+  
+  # Series queries
+  series(name: SeriesName!): Series
+  allSeries: [Series!]!
+  currentSeries: Series!
+  
+  # Character queries
+  character(id: ID!): Character
+  characterByName(name: String!): Character
+  characters(filter: CharacterFilterInput): [Character!]!
+  
+  # Pokemon queries
+  pokemon(id: ID!): AnimePokemon
+  allPokemon(filter: PokemonFilterInput): [AnimePokemon!]!
+  pokemonByOwner(ownerId: ID!): [AnimePokemon!]!
+  
+  # Ash's journey
+  ashKetchum: Character!
+  ashsPokemon: [AnimePokemon!]!
+  ashsBadges: [Badge!]!
+  
+  # Team Rocket
+  teamRocket: TeamRocket!
+  
+  # Battle queries
+  battle(id: ID!): Battle
+  battles(characterId: ID): [Battle!]!
+  gymBattles(region: String): [Battle!]!
+  
+  # Movie queries
+  movie(id: ID!): Movie
+  movieByNumber(number: Int!): Movie
+  allMovies: [Movie!]!
+  
+  # Location queries
+  location(id: ID!): Location
+  locationsByRegion(region: String!): [Location!]!
+  
+  # Voice actor queries
+  voiceActor(id: ID!): VoiceActor
+  voiceActorsByLanguage(language: String!): [VoiceActor!]!
+  
+  # Stats
+  animeStats: AnimeStats!
+}
+
+type AnimeStats {
+  totalEpisodes: Int!
+  totalSeries: Int!
+  totalCharacters: Int!
+  totalPokemon: Int!
+  totalMovies: Int!
+  regions: [String!]!
+}
+
+type Mutation {
+  # Watchlist mutations
+  addToWatchlist(userId: ID!, episodeId: ID!): Boolean!
+  removeFromWatchlist(userId: ID!, episodeId: ID!): Boolean!
+  markAsWatched(userId: ID!, episodeId: ID!): Boolean!
+  
+  # Rating mutations
+  rateEpisode(episodeId: ID!, rating: Int!): Episode!
+  rateMovie(movieId: ID!, rating: Int!): Movie!
+  
+  # Favorite mutations
+  addFavoriteCharacter(userId: ID!, characterId: ID!): Character!
+  addFavoritePokemon(userId: ID!, pokemonId: ID!): AnimePokemon!
+}
+
+type Subscription {
+  newEpisodeReleased: Episode!
+  newMovieReleased: Movie!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
