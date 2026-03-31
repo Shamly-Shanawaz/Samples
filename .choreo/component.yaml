@@ -1,4 +1,4 @@
   schemaVersion: 1.1
   type: proxy
   proxy:
-    apiDefinitionPath: /.choreo/api-definition
+    apiDefinitionPath: api-definition
